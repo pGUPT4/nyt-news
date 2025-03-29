@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from "next/link";
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -66,6 +67,8 @@ export default function Login() {
         </button>
         {error && <p className="text-red-500 mt-2">{error}</p>}
       </form>
+      <p>New here?</p>
+      <Link href = {'signup/'}> Sign up</Link>
     </div>
   );
 }
