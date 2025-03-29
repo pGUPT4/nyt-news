@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request, session, url_for, redirect
 from dotenv import load_dotenv
 import os
 import requests
@@ -6,6 +6,10 @@ import logging
 import boto3
 from datetime import datetime
 import json
+from werkzeug.security import generate_password_hash, check_password_hash
+from authlib.integrations.flask_client import OAuth
+from flask_cors import CORS
+from pymongo import MongoClient
 
 load_dotenv()
 
@@ -22,6 +26,12 @@ env_vars = {
     "AWS_BUCKET_NAME": os.getenv("AWS_BUCKET_NAME", "pgupt4-news-app-s3")
 }
 
+# MongoDB setup
+client = MongoClient(env_vars["MONGO_URI"])
+db = client["news_app"]
+users_collection = db["users"]
+
+# NYT
 NYT_API_KEY = env_vars["NYT_API_KEY"]
 def get_nyt_news():
     url = "http://api.nytimes.com/svc/news/v3/content/all/all.json"
@@ -54,6 +64,35 @@ def get_from_s3(bucket_name=env_vars["AWS_BUCKET_NAME"], key_prefix="processed")
     obj = s3.get_object(Bucket=bucket_name, Key=latest_key)
     return json.loads(obj["Body"].read().decode("utf-8"))
 
+# OAuth setup for Google with Authlib
+oauth = OAuth(app)
+google = oauth.register(
+    name='google',
+    client_id=env_vars["GOOGLE_CLIENT_ID"],
+    client_secret=env_vars["GOOGLE_CLIENT_SECRET"],
+    authorize_url='https://accounts.google.com/o/oauth2/auth',
+    access_token_url='https://accounts.google.com/o/oauth2/token',
+    api_base_url='https://www.googleapis.com/oauth2/v3/',
+    client_kwargs={'scope': 'openid email profile'},
+    jwks_uri='https://www.googleapis.com/oauth2/v3/certs',  # For token verification
+)
+
+# User management (using S3 JSON for simplicity)
+def load_users():
+    try:
+        obj = s3.get_object(Bucket=env_vars["AWS_BUCKET_NAME"], Key="users/users.json")
+        return json.loads(obj["Body"].read().decode("utf-8"))
+    except:
+        return {}  # Empty if no users file exists yet
+
+def save_users(users):
+    s3.put_object(
+        Bucket=env_vars["AWS_BUCKET_NAME"],
+        Key="users/users.json",
+        Body=json.dumps(users),
+        ContentType="application/json"
+    )
+
 @app.route('/raw')
 def hello_world():
     return jsonify(get_nyt_news())
@@ -61,6 +100,63 @@ def hello_world():
 @app.route('/')
 def health_check():
     return jsonify({"status": "ok"}), 200
+
+# Traditional Login
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+    
+    user = users_collection.find_one({"username": username})
+    if user and check_password_hash(user["password"], password):
+        session['user_id'] = str(user["_id"])
+        return jsonify({"status": "success"}), 200
+    return jsonify({"error": "Invalid credentials"}), 401
+
+# Google OAuth Routes
+@app.route('/auth/google')
+def google_login():
+    redirect_uri = url_for('google_callback', _external=True)
+    return google.authorize_redirect(redirect_uri)
+
+@app.route('/auth/google/callback')
+def google_callback():
+    token = google.authorize_access_token()
+    user_info = google.get('userinfo').json()
+    email = user_info['email']
+    
+    # Check if user exists, create if not
+    user = users_collection.find_one({"email": email})
+    if not user:
+        user_data = {
+            "email": email,
+            "username": user_info.get('name', email.split('@')[0]),
+            "password": None  # No password for OAuth users
+        }
+        result = users_collection.insert_one(user_data)
+        user_id = str(result.inserted_id)
+    else:
+        user_id = str(user["_id"])
+    
+    session['user_id'] = user_id
+    return redirect('')  # Redirect to frontend home
+
+# Optional: Signup for traditional login (for testing)
+@app.route('/signup', methods=['POST'])
+def signup():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+    
+    if users_collection.find_one({"username": username}):
+        return jsonify({"error": "Username already exists"}), 400
+    
+    hashed_password = generate_password_hash(password)
+    user_data = {"username": username, "password": hashed_password}
+    result = users_collection.insert_one(user_data)
+    session['user_id'] = str(result.inserted_id)
+    return jsonify({"status": "success"}), 201
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
