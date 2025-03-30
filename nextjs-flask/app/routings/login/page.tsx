@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from "next/link";
 
 // Define interface for API response data
 interface LoginResponse {
@@ -18,7 +19,7 @@ const Login: React.FC = () => {
     e.preventDefault();
     setError(null);
     try {
-      const response = await fetch('https://news-recommender-backend-20d530136c15.herokuapp.com/login', {
+      const response = await fetch('http://127.0.0.1:5000/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -36,30 +37,39 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black">
-      <form onSubmit={handleSubmit} className="bg-gray-400 p-6 rounded-lg shadow-lg">
-        <h1 className="text-2xl font-mono font-bold mb-4">Login</h1>
-        <input
-          type="text"
-          value={username}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
-          placeholder="Username"
-          className="w-full p-2 mb-4 border text-black rounded"
-        />
-        <input
-          type="password"
-          value={password}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
-          placeholder="Password"
-          className="w-full p-2 mb-4 border text-black rounded"
-        />
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 mb-4"
-        >
-          Login
-        </button>
-      </form>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-black">
+      <div className="flex flex-col items-center">
+        <form onSubmit={handleSubmit} className="bg-gray-400 p-6 rounded-lg shadow-lg">
+          <h1 className="text-2xl font-mono font-bold mb-4">Login</h1>
+          <input
+            type="text"
+            value={username}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
+            placeholder="Username"
+            className="w-full p-2 mb-4 border text-black rounded"
+          />
+          <input
+            type="password"
+            value={password}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+            placeholder="Password"
+            className="w-full p-2 mb-4 border text-black rounded"
+          />
+          <button
+            type="submit"
+            className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 mb-4"
+          >
+            Login
+          </button>
+          {error && <p className="text-red-500 mt-2 text-center">{error}</p>}
+        </form>
+        <p className="mt-4 text-white text-center">
+          New here?{' '}
+          <Link href="/routings/signup" className="text-blue-400 hover:underline">
+            Sign Up
+          </Link>
+        </p>
+      </div>
     </div>
   );
 };

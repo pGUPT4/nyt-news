@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link'
 
 // Define interface for API response data
 interface SignupResponse {
@@ -26,7 +27,7 @@ const Signup: React.FC = () => {
     }
 
     try {
-      const response = await fetch('https://news-flask-backend-a6bd30d085ef.herokuapp.com/signup', {
+      const response = await fetch('http://127.0.0.1:5000/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -44,7 +45,7 @@ const Signup: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-black">
       <form onSubmit={handleSubmit} className="bg-gray-400 p-6 rounded-lg shadow-lg">
         <h1 className="text-2xl font-mono font-bold mb-4">Sign Up</h1>
         <input
@@ -76,6 +77,12 @@ const Signup: React.FC = () => {
         </button>
         {error && <p className="text-red-500 mt-2">{error}</p>}
       </form>
+      <p className="mt-4 text-white text-center">
+          Already have an account?{' '}
+          <Link href="/routings/login" className="text-blue-400 hover:underline">
+            Login
+          </Link>
+        </p>
     </div>
   );
 };

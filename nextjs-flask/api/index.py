@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, session, url_for, redirect
+from flask import Flask, jsonify, request, session
 from dotenv import load_dotenv
 import os
 import requests
@@ -16,6 +16,10 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
+app.secret_key = os.getenv("SECRET_KEY", "your-secret-key-here")
+
+# Enable CORS for Next.js frontend (adjust origin as needed)
+CORS(app, supports_credentials=True, origins=["http://localhost:3000"])
 
 env_vars = {
     "MONGO_URI": os.getenv("MONGO_URI"),
@@ -23,8 +27,6 @@ env_vars = {
     "AWS_ACCESS_KEY_ID": os.getenv("AWS_ACCESS_KEY_ID"),
     "AWS_SECRET_ACCESS_KEY": os.getenv("AWS_SECRET_ACCESS_KEY"),
     "AWS_BUCKET_NAME": os.getenv("AWS_BUCKET_NAME", "pgupt4-news-app-s3"), 
-    "GOOGLE_CLIENT_ID": os.getenv("GOOGLE_CLIENT_ID"),
-    "GOOGLE_CLIENT_SECRET": os.getenv("GOOGLE_CLIENT_SECRET")
 }
 
 # MongoDB setup
@@ -81,6 +83,19 @@ def save_users(users):
         ContentType="application/json"
     )
 
+@app.route('/news-galore')
+def news_galore():
+    if 'username' not in session:
+        return jsonify({"error": "Login required"}), 401
+    news_data = get_nyt_news()
+    upload_result = upload_to_s3(news_data)
+    if upload_result["status"] != "success":
+        return jsonify({"error": upload_result["message"]}), 500
+    processed_data = get_from_s3()
+    if "error" not in processed_data:
+        return jsonify(processed_data)
+    return jsonify(news_data)  # Fallback to raw news
+
 @app.route('/raw')
 def hello_world():
     return jsonify(get_nyt_news())
@@ -89,34 +104,44 @@ def hello_world():
 def health_check():
     return jsonify({"status": "ok"}), 200
 
-# Traditional Login
+
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
-    
-    user = users_collection.find_one({"username": username})
-    if user and check_password_hash(user["password"], password):
-        session['user_id'] = str(user["_id"])
-        return jsonify({"status": "success"}), 200
-    return jsonify({"error": "Invalid credentials"}), 401
 
-# Optional: Signup for traditional login (for testing)
+    if not username or not password:
+        return jsonify({"error": "Username and password are required"}), 400
+
+    user = users_collection.find_one({"username": username})
+    if not user or not check_password_hash(user["password"], password):
+        return jsonify({"error": "Invalid username or password"}), 401
+
+    # Set session
+    session['username'] = username
+    return jsonify({"message": "Login successful"}), 200
+
+# Authentication Routes
 @app.route('/signup', methods=['POST'])
 def signup():
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
-    
+
+    if not username or not password:
+        return jsonify({"error": "Username and password are required"}), 400
+
+    # Check if user already exists
     if users_collection.find_one({"username": username}):
         return jsonify({"error": "Username already exists"}), 400
-    
+
+    # Hash the password and store the user
     hashed_password = generate_password_hash(password)
-    user_data = {"username": username, "password": hashed_password}
-    result = users_collection.insert_one(user_data)
-    session['user_id'] = str(result.inserted_id)
-    return jsonify({"status": "success"}), 201
+    user = {"username": username, "password": hashed_password}
+    users_collection.insert_one(user)
+    
+    return jsonify({"message": "Signup successful"}), 201
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
