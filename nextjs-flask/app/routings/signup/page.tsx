@@ -1,16 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function Signup() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState(null);
+// Define interface for API response data
+interface SignupResponse {
+  error?: string;
+}
+
+const Signup: React.FC = () => {
+  const [username, setUsername] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [confirmPassword, setConfirmPassword] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setError(null);
 
@@ -27,7 +32,7 @@ export default function Signup() {
         body: JSON.stringify({ username, password }),
         credentials: 'include',  // For session cookies
       });
-      const data = await response.json();
+      const data: SignupResponse = await response.json();
       if (response.ok) {
         router.push('/routings/login');  // Redirect to login after signup
       } else {
@@ -38,10 +43,6 @@ export default function Signup() {
     }
   };
 
-  const handleGoogleSignup = () => {
-    window.location.href = 'https://news-flask-backend-a6bd30d085ef.herokuapp.com/auth/google';
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-black">
       <form onSubmit={handleSubmit} className="bg-gray-400 p-6 rounded-lg shadow-lg">
@@ -49,21 +50,21 @@ export default function Signup() {
         <input
           type="text"
           value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
           placeholder="Username"
           className="w-full p-2 mb-4 border text-black rounded"
         />
         <input
           type="password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
           placeholder="Password"
           className="w-full p-2 mb-4 border text-black rounded"
         />
         <input
           type="password"
           value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value)}
           placeholder="Confirm Password"
           className="w-full p-2 mb-4 border text-black rounded"
         />
@@ -73,15 +74,10 @@ export default function Signup() {
         >
           Sign Up
         </button>
-        <button
-          type="button"  // Prevent form submission
-          onClick={handleGoogleSignup}
-          className="w-full bg-blue-800 text-white p-2 rounded hover:bg-blue-900"
-        >
-          Sign Up with Google
-        </button>
         {error && <p className="text-red-500 mt-2">{error}</p>}
       </form>
     </div>
   );
-}
+};
+
+export default Signup;

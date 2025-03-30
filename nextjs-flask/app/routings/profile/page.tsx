@@ -4,10 +4,18 @@ import { useRouter } from 'next/navigation';
 import Link from "next/link";
 import Navbar from '@/app/components/navbar';
 
-export default function Profile() {
+// Define interface for navigation link objects
+interface NavLink {
+  name: string;
+  path: string;
+  onClick?: (event: React.MouseEvent<HTMLAnchorElement>) => void;
+  highlight?: boolean;
+}
+
+const Profile: React.FC = () => {
   const router = useRouter();
 
-  const handleLogout = async () => {
+  const handleLogout = async (): Promise<void> => {
     try {
       const response = await fetch('https://news-recommender-backend-20d530136c15.herokuapp.com/logout', {
         credentials: 'include',
@@ -22,7 +30,7 @@ export default function Profile() {
     }
   };
 
-  const navLinks = [
+  const navLinks: NavLink[] = [
     { name: "Home", path: "../" },
     { name: "Logout", path: "#", onClick: handleLogout, highlight: true },
   ];
@@ -36,4 +44,6 @@ export default function Profile() {
       </div>
     </div>
   );
-}
+};
+
+export default Profile;

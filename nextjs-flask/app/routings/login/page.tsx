@@ -1,16 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from "next/link";
 
-export default function Login() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState(null);
+// Define interface for API response data
+interface LoginResponse {
+  error?: string;
+}
+
+const Login: React.FC = () => {
+  const [username, setUsername] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setError(null);
     try {
@@ -20,7 +24,7 @@ export default function Login() {
         body: JSON.stringify({ username, password }),
         credentials: 'include',
       });
-      const data = await response.json();
+      const data: LoginResponse = await response.json();
       if (response.ok) {
         router.push('/');  // Home with FeedTray
       } else {
@@ -31,10 +35,6 @@ export default function Login() {
     }
   };
 
-  const handleGoogleLogin = () => {
-    window.location.href = 'https://news-recommender-backend-20d530136c15.herokuapp.com/auth/google';
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-black">
       <form onSubmit={handleSubmit} className="bg-gray-400 p-6 rounded-lg shadow-lg">
@@ -42,14 +42,14 @@ export default function Login() {
         <input
           type="text"
           value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
           placeholder="Username"
           className="w-full p-2 mb-4 border text-black rounded"
         />
         <input
           type="password"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
           placeholder="Password"
           className="w-full p-2 mb-4 border text-black rounded"
         />
@@ -59,16 +59,9 @@ export default function Login() {
         >
           Login
         </button>
-        <button
-          onClick={handleGoogleLogin}
-          className="w-full bg-blue-800 text-white p-2 rounded hover:bg-blue-900"
-        >
-          Login with Google
-        </button>
-        {error && <p className="text-red-500 mt-2">{error}</p>}
       </form>
-      <p>New here?</p>
-      <Link href = {'signup/'}> Sign up</Link>
     </div>
   );
-}
+};
+
+export default Login;

@@ -3,8 +3,15 @@
 import Navbar from "./components/navbar";
 import FeedTray from "./components/feedTray";
 
-export default function Home() {
-  const navLinks = [
+// Define interface for navigation link objects
+interface NavLink {
+  name: string;
+  path: string;
+  highlight?: boolean;
+}
+
+export default function Home(): JSX.Element {
+  const navLinks: NavLink[] = [
     { name: "News", path: "/" },
     { name: "Profile", path: "/routings/profile", highlight: true },
   ];
