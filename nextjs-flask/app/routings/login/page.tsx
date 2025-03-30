@@ -4,9 +4,9 @@ import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from "next/link";
 
-// Define interface for API response data
 interface LoginResponse {
   error?: string;
+  message?: string;
 }
 
 const Login: React.FC = () => {
@@ -19,19 +19,21 @@ const Login: React.FC = () => {
     e.preventDefault();
     setError(null);
     try {
-      const response = await fetch('http://127.0.0.1:5000/login', {
+      const response = await fetch('http://localhost:5000/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
         credentials: 'include',
       });
       const data: LoginResponse = await response.json();
+      console.log('Login response:', data, 'Status:', response.status); // Debug log
       if (response.ok) {
-        router.push('/');  // Home with FeedTray
+        router.push('/');  // Redirect to main page
       } else {
         setError(data.error || 'Login failed');
       }
     } catch (err) {
+      console.error('Login error:', err); // Debug log
       setError('Something went wrong');
     }
   };

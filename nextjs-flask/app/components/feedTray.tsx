@@ -4,11 +4,9 @@ import React, { useState, useEffect } from 'react';
 import NewsTile from './newsTile';
 import { useRouter } from 'next/navigation';
 
-// Define interface for news item
 interface NewsItem {
   title: string;
   url: string;
-  // Add other properties if they exist in your API response
 }
 
 const FeedTray: React.FC = () => {
@@ -20,13 +18,13 @@ const FeedTray: React.FC = () => {
   useEffect(() => {
     const fetchNews = async (): Promise<void> => {
       try {
-        const response = await fetch('https://news-recommender-backend-20d530136c15.herokuapp.com/news-galore', {
-          credentials: 'include',  // Send session cookie from OAuth
+        const response = await fetch('http://localhost:5000/news-galore', { 
+          credentials: 'include',
         });
-        
+
         if (!response.ok) {
           if (response.status === 401) {
-            router.push('/routings/login');  // Redirect to login on unauthorized
+            router.push('/routings/login');
             return;
           }
           throw new Error('Failed to fetch news');
@@ -42,7 +40,7 @@ const FeedTray: React.FC = () => {
     };
 
     fetchNews();
-  }, [router]);  // Add router as dependency
+  }, [router]);
 
   return (
     <div className="flex justify-center min-h-screen">

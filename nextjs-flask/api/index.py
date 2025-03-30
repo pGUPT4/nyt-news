@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY", "your-secret-key-here")
+app.secret_key = os.getenv("SECRET_KEY")
 
 # Enable CORS for Next.js frontend (adjust origin as needed)
 CORS(app, supports_credentials=True, origins=["http://localhost:3000"])
