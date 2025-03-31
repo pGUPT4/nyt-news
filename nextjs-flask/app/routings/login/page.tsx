@@ -32,6 +32,7 @@ const Login: React.FC = () => {
     }
 
     try {
+      console.log('Sending Login data:', { email, password });
       const response = await fetch('http://localhost:5000/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -39,6 +40,7 @@ const Login: React.FC = () => {
         credentials: 'include',
       });
       const data: LoginResponse = await response.json();
+      console.log('Login response:', data, 'Status:', response.status);
       if (response.ok) {
         router.push('/');
       } else {
@@ -79,7 +81,7 @@ const Login: React.FC = () => {
         <p className="mt-4 text-white text-center">
           New here?{' '}
           <Link href="/routings/signup" className="text-blue-400 hover:underline">
-            Sign Up
+            Create an account
           </Link>
         </p>
       </div>

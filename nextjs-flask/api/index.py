@@ -9,6 +9,7 @@ import json
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_cors import CORS
 from mongoengine import Document, StringField, connect
+import pymongo.errors
 
 load_dotenv()
 
@@ -31,6 +32,12 @@ env_vars = {
 logger.info(f"Connecting to MongoDB with URI: {env_vars['MONGO_URI']}")
 # Connect to MongoDB using mongoengine (no need for pymongo client)
 connect(db="news_app", host=env_vars["MONGO_URI"])
+
+try:
+    connect(db="news_app", host=env_vars["MONGO_URI"])
+except pymongo.errors.ConnectionError as e:
+    logger.error(f"Failed to connect to MongoDB: {str(e)}")
+    raise
 
 # Define User schema
 class User(Document):
@@ -98,16 +105,17 @@ def signup():
     if not email or not password:
         return jsonify({"error": "Email and password are required"}), 400
 
-    # Check if email already exists using User model
-    if User.objects(email=email).first():
-        return jsonify({"error": "Email already exists"}), 400
+    try:
+        if User.objects(email=email).first():
+            return jsonify({"error": "Email already exists"}), 400
 
-    # Create and save new user with hashed password
-    hashed_password = generate_password_hash(password)
-    user = User(email=email, password=hashed_password)
-    user.save()
-
-    return jsonify({"message": "Signup successful"}), 201
+        hashed_password = generate_password_hash(password)
+        user = User(email=email, password=hashed_password)
+        user.save()
+        return jsonify({"message": "Signup successful"}), 201
+    except pymongo.errors.ServerSelectionTimeoutError as e:
+        logger.error(f"Signup failed due to MongoDB timeout: {str(e)}")
+        return jsonify({"error": "Database connection timeout"}), 500
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -118,13 +126,16 @@ def login():
     if not email or not password:
         return jsonify({"error": "Email and password are required"}), 400
 
-    # Find user by email using User model
-    user = User.objects(email=email).first()
-    if not user or not check_password_hash(user.password, password):
-        return jsonify({"error": "Invalid email or password"}), 401
+    try:
+        user = User.objects(email=email).first()
+        if not user or not check_password_hash(user.password, password):
+            return jsonify({"error": "Invalid email or password"}), 401
 
-    session['email'] = email
-    return jsonify({"message": "Login successful"}), 200
+        session['email'] = email
+        return jsonify({"message": "Login successful"}), 200
+    except pymongo.errors.ServerSelectionTimeoutError as e:
+        logger.error(f"Login failed due to MongoDB timeout: {str(e)}")
+        return jsonify({"error": "Database connection timeout"}), 500
 
 @app.route('/logout')
 def logout():
