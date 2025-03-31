@@ -14,21 +14,33 @@ interface NavLink {
 
 const Home: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [username, setUsername] = useState<string>(''); // Store username part of email
   const router = useRouter();
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const checkAuthAndUser = async () => {
       try {
-        const response = await fetch('http://localhost:5000/news-galore', {
-          credentials: 'include',  // Send session cookie
+        const authResponse = await fetch('http://localhost:5000/news-galore', {
+          credentials: 'include',
         });
-        if (response.ok) {
-          setIsAuthenticated(true);
-        } else if (response.status === 401) {
-          setIsAuthenticated(false);
-          router.push('/routings/login');
-        } else {
-          throw new Error('Unexpected response');
+        if (!authResponse.ok) {
+          if (authResponse.status === 401) {
+            setIsAuthenticated(false);
+            router.push('/routings/login');
+          }
+          return;
+        }
+        setIsAuthenticated(true);
+
+        const userResponse = await fetch('http://localhost:5000/user', {
+          credentials: 'include',
+        });
+        const userData = await userResponse.json();
+        if (userResponse.ok) {
+          // Extract username from email (e.g., "name" from "name@example.com")
+          const email = userData.email;
+          const username = email.split('@')[0];
+          setUsername(username);
         }
       } catch (err) {
         setIsAuthenticated(false);
@@ -36,12 +48,12 @@ const Home: React.FC = () => {
       }
     };
 
-    checkAuth();
+    checkAuthAndUser();
   }, [router]);
 
   const navLinks: NavLink[] = [
     { name: "News", path: "/" },
-    { name: "Profile", path: "/routings/profile", highlight: true },
+    { name: username || "Profile", path: "/routings/profile", highlight: true }, // Use username or fallback to "Profile"
   ];
 
   if (isAuthenticated === null) {
@@ -49,7 +61,7 @@ const Home: React.FC = () => {
   }
 
   if (!isAuthenticated) {
-    return null;  // Redirect will handle this
+    return null; // Redirect will handle this
   }
 
   return (
