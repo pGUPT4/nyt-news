@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation';
 import Link from "next/link";
 import Navbar from '@/app/components/navbar';
 
-// Define interface for navigation link objects
 interface NavLink {
   name: string;
   path: string;
@@ -17,11 +16,11 @@ const Profile: React.FC = () => {
 
   const handleLogout = async (): Promise<void> => {
     try {
-      const response = await fetch('https://news-recommender-backend-20d530136c15.herokuapp.com/logout', {
+      const response = await fetch('http://localhost:5000/logout', {  // Update to local backend
         credentials: 'include',
       });
       if (response.ok) {
-        router.push('/login');
+        router.push('/routings/login');
       } else {
         alert('Logout failed');
       }

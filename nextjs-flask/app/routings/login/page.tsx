@@ -10,30 +10,41 @@ interface LoginResponse {
 }
 
 const Login: React.FC = () => {
-  const [username, setUsername] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
+  const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const validatePassword = (password: string) => password.length >= 8;
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setError(null);
+
+    if (!validateEmail(email)) {
+      setError('Please enter a valid email');
+      return;
+    }
+    if (!validatePassword(password)) {
+      setError('Password must be at<LMNT> least 8 characters');
+      return;
+    }
+
     try {
       const response = await fetch('http://localhost:5000/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ email, password }),
         credentials: 'include',
       });
       const data: LoginResponse = await response.json();
-      console.log('Login response:', data, 'Status:', response.status); // Debug log
       if (response.ok) {
-        router.push('/');  // Redirect to main page
+        router.push('/');
       } else {
         setError(data.error || 'Login failed');
       }
     } catch (err) {
-      console.error('Login error:', err); // Debug log
       setError('Something went wrong');
     }
   };
@@ -44,10 +55,10 @@ const Login: React.FC = () => {
         <form onSubmit={handleSubmit} className="bg-gray-400 p-6 rounded-lg shadow-lg">
           <h1 className="text-2xl font-mono font-bold mb-4">Login</h1>
           <input
-            type="text"
-            value={username}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
-            placeholder="Username"
+            type="email"
+            value={email}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+            placeholder="Email"
             className="w-full p-2 mb-4 border text-black rounded"
           />
           <input
