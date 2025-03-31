@@ -8,7 +8,7 @@ from datetime import datetime
 import json
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_cors import CORS
-from pymongo import MongoClient
+from mongoengine import Document, StringField, connect
 
 load_dotenv()
 
@@ -29,9 +29,13 @@ env_vars = {
 }
 
 logger.info(f"Connecting to MongoDB with URI: {env_vars['MONGO_URI']}")
-client = MongoClient(env_vars["MONGO_URI"])
-db = client["news_app"]
-users_collection = db["users"]
+# Connect to MongoDB using mongoengine (no need for pymongo client)
+connect(db="news_app", host=env_vars["MONGO_URI"])
+
+# Define User schema
+class User(Document):
+    email = StringField(required=True, unique=True)
+    password = StringField(required=True)
 
 NYT_API_KEY = env_vars["NYT_API_KEY"]
 def get_nyt_news():
@@ -94,12 +98,15 @@ def signup():
     if not email or not password:
         return jsonify({"error": "Email and password are required"}), 400
 
-    if users_collection.find_one({"email": email}):
+    # Check if email already exists using User model
+    if User.objects(email=email).first():
         return jsonify({"error": "Email already exists"}), 400
 
+    # Create and save new user with hashed password
     hashed_password = generate_password_hash(password)
-    user = {"email": email, "password": hashed_password}
-    users_collection.insert_one(user)
+    user = User(email=email, password=hashed_password)
+    user.save()
+
     return jsonify({"message": "Signup successful"}), 201
 
 @app.route('/login', methods=['POST'])
@@ -111,8 +118,9 @@ def login():
     if not email or not password:
         return jsonify({"error": "Email and password are required"}), 400
 
-    user = users_collection.find_one({"email": email})
-    if not user or not check_password_hash(user["password"], password):
+    # Find user by email using User model
+    user = User.objects(email=email).first()
+    if not user or not check_password_hash(user.password, password):
         return jsonify({"error": "Invalid email or password"}), 401
 
     session['email'] = email
