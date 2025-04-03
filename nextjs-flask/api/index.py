@@ -10,7 +10,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_cors import CORS
 from mongoengine import Document, StringField, ListField, BooleanField, connect
 import pymongo.errors
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 load_dotenv()
 
@@ -25,7 +25,11 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 
-CORS(app, supports_credentials=True, origins=["http://localhost:3000"])
+CORS(app, 
+    supports_credentials=True, 
+    origins=["http://localhost:3000", 
+            "https://nextjs-flask-kt7hk2nnw-parth-guptas-projects-847e8d83.vercel.app"]
+    )
 
 env_vars = {
     "MONGO_URI": os.getenv("MONGO_URI"),
@@ -34,6 +38,9 @@ env_vars = {
     "AWS_SECRET_ACCESS_KEY": os.getenv("AWS_SECRET_ACCESS_KEY"),
     "AWS_BUCKET_NAME": os.getenv("AWS_BUCKET_NAME", "pgupt4-news-app-s3"),
 }
+
+CACHE_FILE = "cache/news_cache.json"
+CACHE_DURATION = timedelta(hours=1)
 
 logger.info(f"Connecting to MongoDB with URI: {env_vars['MONGO_URI']}")
 connect(db="news_app", host=env_vars["MONGO_URI"])
@@ -81,6 +88,19 @@ def upload_to_s3(data, bucket_name=env_vars["AWS_BUCKET_NAME"], key_prefix="raw"
     s3.put_object(Bucket=bucket_name, Key=key, Body=json.dumps(data), ContentType="application/json")
     return {"status": "success", "key": key}
 
+def load_cache():
+    if os.path.exists(CACHE_FILE):
+        with open(CACHE_FILE, "r") as f:
+            data = json.load(f)
+            if datetime.now() - datetime.fromisoformat(data.get("timestamp")) < CACHE_DURATION:
+                return data["results"]
+    return None
+
+def save_cache(data):
+    os.makedirs(os.path.dirname(CACHE_FILE), exist_ok=True)
+    with open(CACHE_FILE, "w") as f:
+        json.dump({"results": data, "timestamp": datetime.now().isoformat()}, f)
+
 @app.route('/news-galore')
 def news_galore():
     if 'email' not in session:
@@ -93,15 +113,19 @@ def news_galore():
     preferences = user.preferences
     logger.info(f"User preferences for {session['email']}: {preferences}")
 
-    # Fetch raw news data and upload to S3
-    news_data = get_nyt_news()
-    if "error" in news_data:
-        return jsonify({"error": news_data["error"]}), 500
+    # Check cache first
+    cached_data = load_cache()
+    if cached_data:
+        news_data = cached_data
+    else:
+        news_data = get_nyt_news()
+        if "error" in news_data:
+            return jsonify({"error": news_data["error"]}), 500
+        save_cache(news_data)
 
     upload_result = upload_to_s3(news_data)
     if upload_result["status"] != "success":
         return jsonify({"error": upload_result.get("message", "Upload failed")}), 500
-
     # Invoke the Lambda function to filter news
     try:
         lambda_response = lambda_client.invoke(
