@@ -36,7 +36,7 @@ const Home: React.FC = () => {
     const checkAuthAndUser = async () => {
       try {
         // Check authentication
-        const authResponse = await fetch('http://localhost:5000/news-galore', {
+        const authResponse = await fetch('/api/news-galore', {
           credentials: 'include',
         });
         if (!authResponse.ok) {
@@ -49,7 +49,7 @@ const Home: React.FC = () => {
         setIsAuthenticated(true);
 
         // Fetch user data
-        const userResponse = await fetch('http://localhost:5000/user', {
+        const userResponse = await fetch('/api/user', {
           credentials: 'include',
         });
         const userData: UserData = await userResponse.json();
@@ -58,7 +58,7 @@ const Home: React.FC = () => {
           setUsername(emailUsername);
           if (userData.isFirstTime) {
             // Fetch categories from /raw
-            const rawResponse = await fetch('http://localhost:5000/raw', {
+            const rawResponse = await fetch('/api/raw', {
               credentials: 'include',
             });
             const rawData: NewsItem = await rawResponse.json();
@@ -92,7 +92,7 @@ const Home: React.FC = () => {
 
   const handleSavePreferences = async () => {
     try {
-      const response = await fetch('http://localhost:5000/preferences', {
+      const response = await fetch('/api/preferences', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ preferences: selectedCategories }),
