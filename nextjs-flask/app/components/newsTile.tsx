@@ -6,19 +6,31 @@ import React from 'react';
 interface NewsTileProps {
   title: string;
   url: string;
+  des_facet: string[]; // Add des_facet to the props interface
 }
 
-const NewsTile: React.FC<NewsTileProps> = ({ title, url }) => {
+const NewsTile: React.FC<NewsTileProps> = ({ title, url, des_facet }) => {
   return (
     <div 
       className="border border-gray-200 rounded-lg p-4 mb-4 shadow-md hover:shadow-lg transition-shadow"
       style={{ width: '350px', height: '350px' }}
     >
       <h3 className="text-lg font-semibold text-gray-800 mb-2">{title}</h3>
+      {/* Display des_facet as a list of categories */}
+      {des_facet && des_facet.length > 0 && (
+        <div className="mb-2">
+          <p className="text-sm text-gray-600">Categories:</p>
+          <ul className="list-disc pl-4 text-sm text-gray-600">
+            {des_facet.map((facet, index) => (
+              <li key={index}>{facet}</li>
+            ))}
+          </ul>
+        </div>
+      )}
       <a
         href={url}
         target="_blank"
-        rel="noopener noreferrer"  // Added for security
+        rel="noopener noreferrer"
         className="text-blue-600 hover:underline"
       >
         Read More

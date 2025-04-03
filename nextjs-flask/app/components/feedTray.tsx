@@ -7,40 +7,69 @@ import { useRouter } from 'next/navigation';
 interface NewsItem {
   title: string;
   url: string;
+  des_facet: string[];
 }
 
 const FeedTray: React.FC = () => {
   const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [preferences, setPreferences] = useState<string[]>([]); // State for preferences
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchNews = async (): Promise<void> => {
-      try {
-        const response = await fetch('http://localhost:5000/news-galore', { 
+  const fetchNewsAndPreferences = async (): Promise<void> => {
+    try {
+      // Fetch user preferences
+      const prefResponse = await fetch('http://localhost:5000/user', {
+        credentials: 'include',
+      });
+      if (!prefResponse.ok) throw new Error('Failed to fetch user preferences');
+      const prefData = await prefResponse.json();
+      
+      // Check if preferences have changed
+      const newPreferences = prefData.preferences || [];
+      if (JSON.stringify(newPreferences) !== JSON.stringify(preferences)) {
+        setPreferences(newPreferences);
+
+        // Fetch news based on the latest preferences
+        const newsResponse = await fetch('http://localhost:5000/news-galore', {
           credentials: 'include',
         });
 
-        if (!response.ok) {
-          if (response.status === 401) {
+        if (!newsResponse.ok) {
+          if (newsResponse.status === 401) {
             router.push('/routings/login');
             return;
           }
           throw new Error('Failed to fetch news');
         }
-        
-        const data: NewsItem[] = await response.json();
-        setNewsItems(data);
-        setLoading(false);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An unknown error occurred');
-        setLoading(false);
-      }
-    };
 
-    fetchNews();
-  }, [router]);
+        const data = await newsResponse.json();
+        console.log('Raw data from /news-galore:', data); // Debug log
+        if (!Array.isArray(data)) {
+          throw new Error('Unexpected data format: Expected an array');
+        }
+        setNewsItems(data);
+      }
+      setLoading(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // Initial fetch
+    fetchNewsAndPreferences();
+
+    // Set up polling to check for preference updates every 5 seconds
+    const intervalId = setInterval(() => {
+      fetchNewsAndPreferences();
+    }, 5000);
+
+    // Clean up the interval on component unmount
+    return () => clearInterval(intervalId);
+  }, [router]); // Only depend on router
 
   return (
     <div className="flex justify-center min-h-screen">
@@ -49,10 +78,23 @@ const FeedTray: React.FC = () => {
           <div className="text-gray-800 text-center">Loading news...</div>
         ) : error ? (
           <div className="text-red-900 text-center">Error: {error}</div>
+        ) : newsItems.length === 0 ? (
+          <div className="text-gray-800 text-center">
+            No news available for your preferences. Try updating your preferences in the{' '}
+            <a href="/routings/profile" className="text-blue-600 hover:underline">
+              Profile
+            </a>{' '}
+            page.
+          </div>
         ) : (
           <div className="flex flex-wrap gap-4 justify-center">
             {newsItems.map((item: NewsItem, index: number) => (
-              <NewsTile key={index} title={item.title} url={item.url} />
+              <NewsTile
+                key={index}
+                title={item.title}
+                url={item.url}
+                des_facet={item.des_facet}
+              />
             ))}
           </div>
         )}

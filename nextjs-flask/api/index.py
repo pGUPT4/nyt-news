@@ -8,8 +8,9 @@ from datetime import datetime
 import json
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_cors import CORS
-from mongoengine import Document, StringField, connect
+from mongoengine import Document, StringField, ListField, BooleanField, connect
 import pymongo.errors
+from datetime import timedelta
 
 load_dotenv()
 
@@ -18,6 +19,11 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
+
+# Session configuration
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 
 CORS(app, supports_credentials=True, origins=["http://localhost:3000"])
 
@@ -30,7 +36,6 @@ env_vars = {
 }
 
 logger.info(f"Connecting to MongoDB with URI: {env_vars['MONGO_URI']}")
-# Connect to MongoDB using mongoengine (no need for pymongo client)
 connect(db="news_app", host=env_vars["MONGO_URI"])
 
 try:
@@ -39,10 +44,12 @@ except pymongo.errors.ConnectionError as e:
     logger.error(f"Failed to connect to MongoDB: {str(e)}")
     raise
 
-# Define User schema
+# Define User schema with preferences and isFirstTime
 class User(Document):
     email = StringField(required=True, unique=True)
     password = StringField(required=True)
+    preferences = ListField(StringField(), default=[])
+    isFirstTime = BooleanField(default=True)
 
 NYT_API_KEY = env_vars["NYT_API_KEY"]
 def get_nyt_news():
@@ -62,31 +69,61 @@ s3 = boto3.client(
     aws_secret_access_key=env_vars["AWS_SECRET_ACCESS_KEY"]
 )
 
+lambda_client = boto3.client(
+    "lambda",
+    aws_access_key_id=env_vars["AWS_ACCESS_KEY_ID"],
+    aws_secret_access_key=env_vars["AWS_SECRET_ACCESS_KEY"],
+    region_name="us-east-2"
+)
+
 def upload_to_s3(data, bucket_name=env_vars["AWS_BUCKET_NAME"], key_prefix="raw"):
     key = f"{key_prefix}/news-{datetime.now().strftime('%Y-%m-%d-%H-%M-%S')}.json"
     s3.put_object(Bucket=bucket_name, Key=key, Body=json.dumps(data), ContentType="application/json")
     return {"status": "success", "key": key}
 
-def get_from_s3(bucket_name=env_vars["AWS_BUCKET_NAME"], key_prefix="processed"):
-    response = s3.list_objects_v2(Bucket=bucket_name, Prefix=key_prefix)
-    if "Contents" not in response:
-        return {"error": "No processed files found"}
-    latest_key = max(response["Contents"], key=lambda x: x["LastModified"])["Key"]
-    obj = s3.get_object(Bucket=bucket_name, Key=latest_key)
-    return json.loads(obj["Body"].read().decode("utf-8"))
-
 @app.route('/news-galore')
 def news_galore():
     if 'email' not in session:
         return jsonify({"error": "Login required"}), 401
+    
+    # Fetch user preferences
+    user = User.objects(email=session['email']).first()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    preferences = user.preferences
+    logger.info(f"User preferences for {session['email']}: {preferences}")
+
+    # Fetch raw news data and upload to S3
     news_data = get_nyt_news()
+    if "error" in news_data:
+        return jsonify({"error": news_data["error"]}), 500
+
     upload_result = upload_to_s3(news_data)
     if upload_result["status"] != "success":
         return jsonify({"error": upload_result.get("message", "Upload failed")}), 500
-    processed_data = get_from_s3()
-    if "error" not in processed_data:
-        return jsonify(processed_data)
-    return jsonify(news_data)
+
+    # Invoke the Lambda function to filter news
+    try:
+        lambda_response = lambda_client.invoke(
+            FunctionName="news-app-lambda",  # Updated to the correct function name
+            InvocationType="RequestResponse",
+            Payload=json.dumps({"preferences": preferences})
+        )
+        lambda_result = json.loads(lambda_response['Payload'].read().decode('utf-8'))
+        logger.info(f"Lambda response status: {lambda_result['statusCode']}")
+
+        if lambda_result['statusCode'] != 200:
+            logger.error(f"Lambda error: {lambda_result['body']}")
+            return jsonify({"error": json.loads(lambda_result['body'])['error']}), lambda_result['statusCode']
+
+        filtered_news = json.loads(lambda_result['body'])
+        logger.info(f"Returning {len(filtered_news)} filtered news items from Lambda")
+        return jsonify(filtered_news)
+
+    except Exception as e:
+        logger.error(f"Error invoking Lambda: {str(e)}")
+        # Fallback to raw news if Lambda fails
+        return jsonify(news_data)
 
 @app.route('/raw')
 def hello_world():
@@ -146,7 +183,32 @@ def logout():
 def get_user():
     if 'email' not in session:
         return jsonify({"error": "Not logged in"}), 401
-    return jsonify({"email": session['email']}), 200
+    user = User.objects(email=session['email']).first()
+    return jsonify({
+        "email": user.email,
+        "preferences": user.preferences,
+        "isFirstTime": user.isFirstTime
+    }), 200
+
+@app.route('/preferences', methods=['POST'])
+def update_preferences():
+    if 'email' not in session:
+        logger.error("Preferences update failed: User not logged in")
+        return jsonify({"error": "Login required"}), 401
+    data = request.get_json()
+    preferences = data.get('preferences', [])
+    logger.info(f"Updating preferences for user {session['email']}: {preferences}")
+    try:
+        user = User.objects(email=session['email']).first()
+        if not user:
+            logger.error(f"User {session['email']} not found")
+            return jsonify({"error": "User not found"}), 404
+        user.update(set__preferences=preferences, set__isFirstTime=False)
+        logger.info(f"Preferences updated successfully for user {session['email']}")
+        return jsonify({"message": "Preferences updated"}), 200
+    except pymongo.errors.ServerSelectionTimeoutError as e:
+        logger.error(f"Preferences update failed due to MongoDB timeout: {str(e)}")
+        return jsonify({"error": "Database connection timeout"}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
