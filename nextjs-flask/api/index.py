@@ -25,7 +25,7 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 
-CORS(app, supports_credentials=True, origins=["http://localhost:3000"])
+CORS(app, supports_credentials=True, origins=["http://localhost:3000", "https://newsapp-parthgupta.vercel.app"])
 
 env_vars = {
     "MONGO_URI": os.getenv("MONGO_URI"),
