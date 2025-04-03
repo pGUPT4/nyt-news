@@ -4,7 +4,11 @@
       {
         "src": "api/index.py",
         "use": "@vercel/python",
-        "config": { "maxLambdaSize": "15mb", "includeFiles": ["api/*.py"] }
+        "config": {
+          "maxLambdaSize": "15mb",
+          "includeFiles": ["api/**"],
+          "runtime": "python3.9"
+        }
       },
       {
         "src": "package.json",
@@ -14,7 +18,7 @@
     "routes": [
       {
         "src": "/api/(.*)",
-        "dest": "api/index.py"
+        "dest": "/api/index.py"
       },
       {
         "handle": "filesystem"

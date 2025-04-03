@@ -1,0 +1,20 @@
+[tool.vercel]
+runtime = "python3.9"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "news-app-flask"
+version = "0.1.0"
+dependencies = [
+  "flask==2.3.3",
+  "flask-cors==4.0.0",
+  "requests==2.31.0",
+  "python-dotenv==1.0.0",
+  "boto3==1.28.57",
+  "werkzeug==3.0.1",
+  "mongoengine==0.27.0",
+  "pymongo==4.5.0"
+]
