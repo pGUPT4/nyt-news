@@ -28,7 +28,8 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 CORS(app, 
     supports_credentials=True, 
     origins=["http://localhost:3000", 
-            "https://nextjs-flask-kt7hk2nnw-parth-guptas-projects-847e8d83.vercel.app"]
+             "https://*.vercel.app", 
+             "https://newsapp-parthgupta.vercel.app"]
     )
 
 env_vars = {
