@@ -97,7 +97,7 @@ def save_cache(data):
     with open(CACHE_FILE, "w") as f:
         json.dump({"results": data, "timestamp": datetime.now().isoformat()}, f)
 
-@app.route('/news-galore')
+@app.route('/api/news-galore')
 def news_galore():
     if 'email' not in session:
         return jsonify({"error": "Login required"}), 401
@@ -145,15 +145,15 @@ def news_galore():
         # Fallback to raw news if Lambda fails
         return jsonify(news_data)
 
-@app.route('/raw')
+@app.route('/api/raw')
 def hello_world():
     return jsonify(get_nyt_news())
 
-@app.route('/')
+@app.route('/api/')
 def health_check():
     return jsonify({"status": "ok"}), 200
 
-@app.route('/signup', methods=['POST'])
+@app.route('/api/signup', methods=['POST'])
 def signup():
     data = request.get_json()
     email = data.get('email')
@@ -174,7 +174,7 @@ def signup():
         logger.error(f"Signup failed due to MongoDB timeout: {str(e)}")
         return jsonify({"error": "Database connection timeout"}), 500
 
-@app.route('/login', methods=['POST'])
+@app.route('/api/login', methods=['POST'])
 def login():
     data = request.get_json()
     email = data.get('email')
@@ -194,12 +194,12 @@ def login():
         logger.error(f"Login failed due to MongoDB timeout: {str(e)}")
         return jsonify({"error": "Database connection timeout"}), 500
 
-@app.route('/logout')
+@app.route('/api/logout')
 def logout():
     session.pop('email', None)
     return jsonify({"message": "Logout successful"}), 200
 
-@app.route('/user')
+@app.route('/api/user')
 def get_user():
     if 'email' not in session:
         return jsonify({"error": "Not logged in"}), 401
@@ -210,7 +210,7 @@ def get_user():
         "isFirstTime": user.isFirstTime
     }), 200
 
-@app.route('/preferences', methods=['POST'])
+@app.route('/api/preferences', methods=['POST'])
 def update_preferences():
     if 'email' not in session:
         logger.error("Preferences update failed: User not logged in")
@@ -230,5 +230,8 @@ def update_preferences():
         logger.error(f"Preferences update failed due to MongoDB timeout: {str(e)}")
         return jsonify({"error": "Database connection timeout"}), 500
 
+# if __name__ == "__main__":
+#     app.run(host="0.0.0.0", port=5000)
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run()
