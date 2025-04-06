@@ -4,13 +4,13 @@ import os
 import requests
 import logging
 import boto3
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_cors import CORS
 from mongoengine import Document, StringField, ListField, BooleanField, connect
 import pymongo.errors
-from datetime import timedelta
+from collections import deque
 
 load_dotenv()
 
@@ -52,15 +52,37 @@ class User(Document):
     isFirstTime = BooleanField(default=True)
 
 NYT_API_KEY = env_vars["NYT_API_KEY"]
+# In-memory cache for NYT news (simple fallback)
+news_cache = {"data": None, "timestamp": None}
+CACHE_TIMEOUT = timedelta(minutes=5)
+
+# Rate limiting (10 requests per minute)
+request_queue = deque(maxlen=10)
+rate_limit_window = timedelta(minutes=1)
+
 def get_nyt_news():
+    current_time = datetime.now()
+    # Check rate limit
+    while request_queue and (current_time - request_queue[0] > rate_limit_window):
+        request_queue.popleft()
+    if len(request_queue) >= 10:
+        logger.warning("Rate limit exceeded: 10 requests per minute")
+        return news_cache["data"] if news_cache["data"] and (current_time - news_cache["timestamp"] < CACHE_TIMEOUT) else {"error": "Rate limit exceeded"}
+
     url = "http://api.nytimes.com/svc/news/v3/content/all/all.json"
     params = {"api-key": NYT_API_KEY}
     try:
         response = requests.get(url, params=params)
         response.raise_for_status()
-        return response.json()["results"]
+        news_data = response.json()["results"]
+        news_cache["data"] = news_data
+        news_cache["timestamp"] = current_time
+        request_queue.append(current_time)
+        return news_data
     except requests.RequestException as e:
         logger.error(f"NYT API request failed: {str(e)}")
+        if response.status_code == 429:
+            return news_cache["data"] if news_cache["data"] and (current_time - news_cache["timestamp"] < CACHE_TIMEOUT) else {"error": "Too many requests, try again later"}
         return {"error": str(e)}
 
 s3 = boto3.client(
@@ -96,7 +118,7 @@ def news_galore():
     # Fetch raw news data and upload to S3
     news_data = get_nyt_news()
     if "error" in news_data:
-        return jsonify({"error": news_data["error"]}), 500
+        return jsonify({"error": news_data["error"]}), 429 if "Too many requests" in news_data["error"] else 500
 
     upload_result = upload_to_s3(news_data)
     if upload_result["status"] != "success":
@@ -105,7 +127,7 @@ def news_galore():
     # Invoke the Lambda function to filter news
     try:
         lambda_response = lambda_client.invoke(
-            FunctionName="news-app-lambda",  # Updated to the correct function name
+            FunctionName="news-app-lambda",
             InvocationType="RequestResponse",
             Payload=json.dumps({"preferences": preferences})
         )
@@ -122,8 +144,7 @@ def news_galore():
 
     except Exception as e:
         logger.error(f"Error invoking Lambda: {str(e)}")
-        # Fallback to raw news if Lambda fails
-        return jsonify(news_data)
+        return jsonify(news_data), 200  # Fallback to raw news if Lambda fails
 
 @app.route('/raw')
 def hello_world():

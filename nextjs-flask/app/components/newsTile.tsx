@@ -16,17 +16,6 @@ const NewsTile: React.FC<NewsTileProps> = ({ title, url, des_facet }) => {
       style={{ width: '350px', height: '350px' }}
     >
       <h3 className="text-lg font-semibold text-gray-800 mb-2">{title}</h3>
-      {/* Display des_facet as a list of categories */}
-      {des_facet && des_facet.length > 0 && (
-        <div className="mb-2">
-          <p className="text-sm text-gray-600">Categories:</p>
-          <ul className="list-disc pl-4 text-sm text-gray-600">
-            {des_facet.map((facet, index) => (
-              <li key={index}>{facet}</li>
-            ))}
-          </ul>
-        </div>
-      )}
       <a
         href={url}
         target="_blank"
