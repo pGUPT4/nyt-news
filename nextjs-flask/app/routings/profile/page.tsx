@@ -33,7 +33,7 @@ const Profile: React.FC = () => {
     const fetchUserData = async () => {
       try {
         // Fetch user data
-        const userResponse = await fetch('http://localhost:5000/user', {
+        const userResponse = await fetch('https://full-stack-backend-flask.vercel.app/user', {
           credentials: 'include',
         });
         if (!userResponse.ok) {
@@ -47,7 +47,7 @@ const Profile: React.FC = () => {
         setSelectedCategories(userData.preferences || []);
 
         // Fetch categories from /raw
-        const rawResponse = await fetch('http://localhost:5000/raw', {
+        const rawResponse = await fetch('https://full-stack-backend-flask.vercel.app/raw', {
           credentials: 'include',
         });
         const rawData: NewsItem = await rawResponse.json();
@@ -71,7 +71,7 @@ const Profile: React.FC = () => {
 
   const handleLogout = async (): Promise<void> => {
     try {
-      const response = await fetch('http://localhost:5000/logout', {
+      const response = await fetch('https://full-stack-backend-flask.vercel.app/logout', {
         credentials: 'include',
       });
       if (response.ok) {
@@ -92,7 +92,7 @@ const Profile: React.FC = () => {
 
   const handleSavePreferences = async () => {
     try {
-      const response = await fetch('http://localhost:5000/preferences', {
+      const response = await fetch('https://full-stack-backend-flask.vercel.app/preferences', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ preferences: selectedCategories }),

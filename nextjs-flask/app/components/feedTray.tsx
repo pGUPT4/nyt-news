@@ -20,7 +20,7 @@ const FeedTray: React.FC = () => {
   const fetchNewsAndPreferences = async (): Promise<void> => {
     try {
       // Fetch user preferences
-      const prefResponse = await fetch('http://localhost:5000/user', {
+      const prefResponse = await fetch('https://full-stack-backend-flask.vercel.app//user', {
         credentials: 'include',
       });
       if (!prefResponse.ok) throw new Error('Failed to fetch user preferences');
@@ -32,7 +32,7 @@ const FeedTray: React.FC = () => {
         setPreferences(newPreferences);
 
         // Fetch news based on the latest preferences
-        const newsResponse = await fetch('http://localhost:5000/news-galore', {
+        const newsResponse = await fetch('https://full-stack-backend-flask.vercel.app/news-galore', {
           credentials: 'include',
         });
 

@@ -33,7 +33,7 @@ const Login: React.FC = () => {
 
     try {
       console.log('Sending Login data:', { email, password });
-      const response = await fetch('http://localhost:5000/login', {
+      const response = await fetch('https://full-stack-backend-flask.vercel.app/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
