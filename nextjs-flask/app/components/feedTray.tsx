@@ -20,7 +20,7 @@ const FeedTray: React.FC = () => {
   const fetchNewsAndPreferences = async (): Promise<void> => {
     try {
       // Fetch user preferences
-      const prefResponse = await fetch('https://full-stack-backend-flask.vercel.app//user', {
+      const prefResponse = await fetch('https://full-stack-backend-flask.vercel.app/user', {
         credentials: 'include',
       });
       if (!prefResponse.ok) throw new Error('Failed to fetch user preferences');

@@ -35,10 +35,11 @@ const Home: React.FC = () => {
   useEffect(() => {
     const checkAuthAndUser = async () => {
       try {
-        // Check authentication
-        const authResponse = await fetch('http://localhost:5000/news-galore', {
+        console.log('Checking authentication with /news-galore');
+        const authResponse = await fetch('https://full-stack-backend-flask.vercel.app/news-galore', {
           credentials: 'include',
         });
+        console.log('Auth response:', authResponse.status, authResponse.headers);
         if (!authResponse.ok) {
           if (authResponse.status === 401) {
             setIsAuthenticated(false);
@@ -49,33 +50,33 @@ const Home: React.FC = () => {
         setIsAuthenticated(true);
 
         // Fetch user data
-        const userResponse = await fetch('http://localhost:5000/user', {
+        const userResponse = await fetch('https://full-stack-backend-flask.vercel.app/user', {
           credentials: 'include',
         });
         const userData: UserData = await userResponse.json();
+        console.log('User data response:', userResponse.status, userData);
         if (userResponse.ok) {
           const emailUsername = userData.email.split('@')[0];
           setUsername(emailUsername);
           if (userData.isFirstTime) {
             // Fetch categories from /raw
-            const rawResponse = await fetch('http://localhost:5000/raw', {
+            const rawResponse = await fetch('https://full-stack-backend-flask.vercel.app/raw', {
               credentials: 'include',
             });
             const rawData: NewsItem = await rawResponse.json();
-            // Check if rawData is an array (news items) or an error object
             if (Array.isArray(rawData)) {
               const allCategories = rawData.flatMap((item: NewsItem) => item.des_facet || []);
               const uniqueCategories = Array.from(new Set(allCategories)) as string[];
               setCategories(uniqueCategories);
             } else {
-              // Handle error case (e.g., { error: "NYT API request failed" })
-              console.error('Failed to fetch categories');
+              console.error('Failed to fetch categories:', rawData);
               setCategories([]);
             }
-              setShowPopup(true);
-            }
+            setShowPopup(true);
+          }
         }
       } catch (err) {
+        console.error('Auth check error:', err);
         setIsAuthenticated(false);
         router.push('/routings/login');
       }
