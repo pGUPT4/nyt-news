@@ -2,7 +2,7 @@ import { useState, ChangeEvent, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { useRegisterMutation } from '@/redux/features/authApiSlice';
 
-export default function useRegister() {
+export default function useSignUp() {
 	const router = useRouter();
 	const [register, { isLoading }] = useRegisterMutation();
 

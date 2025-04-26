@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from "next/link";
-import Navbar from '@/app/components/navbar';
+import Navbar from '@/components/navbar';
 
 interface NavLink {
   name: string;

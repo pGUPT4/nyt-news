@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import FeedTray from '@/app/components/feedTray';
-import Navbar from '@/app/components/navbar';
+import FeedTray from '@/components/feedTray';
+import Navbar from '@/components/navbar';
 
 interface NavLink {
   name: string;
