@@ -15,7 +15,7 @@ interface Config {
 
 interface Props {
 	config: Config[];
-	isLoading: boolean;
+	formHeader: string;
 	btnText: string;
 	onChange: (event: ChangeEvent<HTMLInputElement>) => void;
 	onSubmit: (event: FormEvent<HTMLFormElement>) => void;
@@ -23,15 +23,15 @@ interface Props {
 
 export default function Form({
 	config,
-	isLoading,
-	btnText = 'Login',
+	formHeader,
+	btnText,
 	onChange,
 	onSubmit,
 }: Props) {
 	return (
-		<div className = 'min-h-screen flex flex-col items-center justify-center bg-black'>
-			<form className='bg-gray-400 p-6 rounded-lg shadow-lg' onSubmit={onSubmit}>
-				<h1 className="text-2xl font-bold mb-4">Sign Up</h1>
+		<div className = ' flex flex-col items-center justify-center bg-black'>
+			<form className='bg-gray-400 p-6 rounded-lg shadow-lg w-2xl' onSubmit={onSubmit}>
+				<h1 className="text-2xl font-bold mb-4">{formHeader}</h1>
 				{config.map(input => (
 					<Input
 						key={input.labelId}

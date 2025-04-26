@@ -3,6 +3,7 @@
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from "next/link";
+import { LoginForm } from '@/components/forms';
 
 interface LoginResponse {
   error?: string;
@@ -10,53 +11,54 @@ interface LoginResponse {
 }
 
 const Login: React.FC = () => {
-  const prod_url = "https://nyt-news-api.pgupt4.com/api/jwt/create/"
-  const [email, setEmail] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
+  // const prod_url = "https://nyt-news-api.pgupt4.com/api/jwt/create/"
+  // const [email, setEmail] = useState<string>('');
+  // const [password, setPassword] = useState<string>('');
+  // const [error, setError] = useState<string | null>(null);
+  // const router = useRouter();
 
-  const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const validatePassword = (password: string) => password.length >= 8;
+  // const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  // const validatePassword = (password: string) => password.length >= 8;
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
-    e.preventDefault();
-    setError(null);
+  // const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
+  //   e.preventDefault();
+  //   setError(null);
 
-    if (!validateEmail(email)) {
-      setError('Please enter a valid email');
-      return;
-    }
-    if (!validatePassword(password)) {
-      setError('Password must be at<LMNT> least 8 characters');
-      return;
-    }
+  //   if (!validateEmail(email)) {
+  //     setError('Please enter a valid email');
+  //     return;
+  //   }
+  //   if (!validatePassword(password)) {
+  //     setError('Password must be at<LMNT> least 8 characters');
+  //     return;
+  //   }
 
-    try {
-      console.log('Sending Login data:', { email, password });
-      const response = await fetch(`${prod_url}/login/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-        credentials: 'include',
-      });
-      const data: LoginResponse = await response.json();
-      console.log('Login response:', data, 'Status:', response.status);
-      if (response.ok) {
-        router.push('/');
-      } else {
-        setError(data.error || 'Login failed');
-      }
-    } catch (err) {
-      console.error('Login error:', err);
-      setError('Something went wrong');
-    }
-  };
+  //   try {
+  //     console.log('Sending Login data:', { email, password });
+  //     const response = await fetch(`${prod_url}/login/`, {
+  //       method: 'POST',
+  //       headers: { 'Content-Type': 'application/json' },
+  //       body: JSON.stringify({ email, password }),
+  //       credentials: 'include',
+  //     });
+  //     const data: LoginResponse = await response.json();
+  //     console.log('Login response:', data, 'Status:', response.status);
+  //     if (response.ok) {
+  //       router.push('/');
+  //     } else {
+  //       setError(data.error || 'Login failed');
+  //     }
+  //   } catch (err) {
+  //     console.error('Login error:', err);
+  //     setError('Something went wrong');
+  //   }
+  // };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-black">
       <div className="flex flex-col items-center">
-        <form onSubmit={handleSubmit} className="bg-gray-400 p-6 rounded-lg shadow-lg">
+        <LoginForm />
+        {/* <form onSubmit={handleSubmit} className="bg-gray-400 p-6 rounded-lg shadow-lg">
           <h1 className="text-2xl font-mono font-bold mb-4">Login</h1>
           <input
             type="email"
@@ -79,8 +81,8 @@ const Login: React.FC = () => {
             Login
           </button>
           {error && <p className="text-red-500 mt-2 text-center">{error}</p>}
-        </form>
-        <p className="mt-4 text-white text-center">
+        </form> */}
+        <p className="text-white text-center">
           New here?{' '}
           <Link href="/auth/signup" className="text-blue-400 hover:underline">
             Create an account

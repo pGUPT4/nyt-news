@@ -1,37 +1,14 @@
 'use client';
 
-import { useSignUp } from '@/hooks';
+import { useLogin } from '@/hooks';
 import { Form } from '@/components/forms';
 
-export default function RegisterForm() {
-	const {
-		first_name,
-		last_name,
-		email,
-		password,
-		re_password,
-		isLoading,
-		onChange,
-		onSubmit,
-	} = useSignUp();
+export default function LoginForm() {
+	const { email, password, isLoading, onChange, onSubmit } = useLogin();
 
 	const config = [
 		{
-			labelText: 'First name',
-			labelId: 'first_name',
-			type: 'text',
-			value: first_name,
-			required: true,
-		},
-		{
-			labelText: 'Last name',
-			labelId: 'last_name',
-			type: 'text',
-			value: last_name,
-			required: true,
-		},
-		{
-			labelText: 'Email address',
+			labelText: 'Email',
 			labelId: 'email',
 			type: 'email',
 			value: email,
@@ -42,13 +19,10 @@ export default function RegisterForm() {
 			labelId: 'password',
 			type: 'password',
 			value: password,
-			required: true,
-		},
-		{
-			labelText: 'Confirm password',
-			labelId: 're_password',
-			type: 'password',
-			value: re_password,
+			// link: {
+			// 	linkText: 'Forgot password?',
+			// 	linkUrl: '/password-reset',
+			// },
 			required: true,
 		},
 	];
@@ -56,8 +30,8 @@ export default function RegisterForm() {
 	return (
 		<Form
 			config={config}
-			isLoading={isLoading}
-			btnText='Sign up'
+			btnText='Login'
+			formHeader='Login'
 			onChange={onChange}
 			onSubmit={onSubmit}
 		/>

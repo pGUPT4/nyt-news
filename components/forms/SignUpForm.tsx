@@ -8,7 +8,6 @@ export default function RegisterForm() {
 		email,
 		password,
 		re_password,
-		isLoading,
 		onChange,
 		onSubmit,
 	} = useSignUp();
@@ -40,7 +39,7 @@ export default function RegisterForm() {
 	return (
 		<Form
 			config={config}
-			isLoading={isLoading}
+			formHeader='Register'
 			btnText='Sign up'
 			onChange={onChange}
 			onSubmit={onSubmit}
