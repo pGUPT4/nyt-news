@@ -29,7 +29,8 @@ export default function useLogin() {
 			.unwrap()
 			.then(() => {
 				dispatch(setAuth());
-				router.push('/dashboard');
+				router.push('/home');
+				console.log('Login Successful')
 			})
 			.catch(() => {
 				// toast.error('Failed to log in');

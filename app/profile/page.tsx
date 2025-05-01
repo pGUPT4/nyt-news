@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from "next/link";
 import Navbar from '@/components/navbar';
+import { useRetrieveUserQuery } from '@/redux/features/authApiSlice';
 
 interface NavLink {
   name: string;
@@ -22,6 +23,7 @@ interface NewsItem {
 }
 
 const Profile: React.FC = () => {
+  const {data: user, isLoading, isFetching} = useRetrieveUserQuery();
   const prod_url = "https://news-backend-django-5ae28e9da582.herokuapp.com"
   const [activeSection, setActiveSection] = useState<'userInfo' | 'preferences'>('userInfo');
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -30,63 +32,63 @@ const Profile: React.FC = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        // Fetch user data
-        const userResponse = await fetch(`${prod_url}/user/`, {
-          credentials: 'include',
-          method: 'GET'
-        });
-        if (!userResponse.ok) {
-          throw new Error('Failed to fetch user data');
-        }
-        const userData = await userResponse.json();
-        setUserData({
-          email: userData.email,
-          preferences: Array.isArray(userData.preferences) ? userData.preferences : [],
-        });
-        setSelectedCategories(userData.preferences || []);
+  // useEffect(() => {
+  //   const fetchUserData = async () => {
+  //     try {
+  //       // Fetch user data
+  //       const userResponse = await fetch(`${prod_url}/user/`, {
+  //         credentials: 'include',
+  //         method: 'GET'
+  //       });
+  //       if (!userResponse.ok) {
+  //         throw new Error('Failed to fetch user data');
+  //       }
+  //       const userData = await userResponse.json();
+  //       setUserData({
+  //         email: userData.email,
+  //         preferences: Array.isArray(userData.preferences) ? userData.preferences : [],
+  //       });
+  //       setSelectedCategories(userData.preferences || []);
 
-        // Fetch categories from /raw
-        const rawResponse = await fetch(`${prod_url}/raw/`, {
-          credentials: 'include',
-          method: 'GET'
-        });
-        const rawData: NewsItem = await rawResponse.json();
-        // Check if rawData is an array (news items) or an error object
-        if (Array.isArray(rawData)) {
-          const allCategories = rawData.flatMap((item: NewsItem) => item.des_facet || []);
-          const uniqueCategories = Array.from(new Set(allCategories)) as string[];
-          setCategories(uniqueCategories);
-        } else {
-          // Handle error case (e.g., { error: "NYT API request failed" })
-          console.error('Failed to fetch categories');
-          setCategories([]);
-        }
-      } catch (err) {
-        setError('Failed to load user data');
-        router.push('/auth/login');
-      }
-    };
-    fetchUserData();
-  }, [router]);
+  //       // Fetch categories from /raw
+  //       const rawResponse = await fetch(`${prod_url}/raw/`, {
+  //         credentials: 'include',
+  //         method: 'GET'
+  //       });
+  //       const rawData: NewsItem = await rawResponse.json();
+  //       // Check if rawData is an array (news items) or an error object
+  //       if (Array.isArray(rawData)) {
+  //         const allCategories = rawData.flatMap((item: NewsItem) => item.des_facet || []);
+  //         const uniqueCategories = Array.from(new Set(allCategories)) as string[];
+  //         setCategories(uniqueCategories);
+  //       } else {
+  //         // Handle error case (e.g., { error: "NYT API request failed" })
+  //         console.error('Failed to fetch categories');
+  //         setCategories([]);
+  //       }
+  //     } catch (err) {
+  //       setError('Failed to load user data');
+  //       router.push('/auth/login');
+  //     }
+  //   };
+  //   fetchUserData();
+  // }, [router]);
 
-  const handleLogout = async (): Promise<void> => {
-    try {
-      const response = await fetch(`${prod_url}/logout/`, {
-        credentials: 'include',
-        method: 'GET'
-      });
-      if (response.ok) {
-        router.push('/auth/login');
-      } else {
-        alert('Logout failed');
-      }
-    } catch (err) {
-      alert('Something went wrong');
-    }
-  };
+  // const handleLogout = async (): Promise<void> => {
+  //   try {
+  //     const response = await fetch(`${prod_url}/logout/`, {
+  //       credentials: 'include',
+  //       method: 'GET'
+  //     });
+  //     if (response.ok) {
+  //       router.push('/auth/login');
+  //     } else {
+  //       alert('Logout failed');
+  //     }
+  //   } catch (err) {
+  //     alert('Something went wrong');
+  //   }
+  // };
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategories((prev) =>
@@ -94,27 +96,28 @@ const Profile: React.FC = () => {
     );
   };
 
-  const handleSavePreferences = async () => {
-    try {
-      const response = await fetch(`${prod_url}/preferences/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ preferences: selectedCategories }),
-        credentials: 'include',
-      });
-      if (response.ok) {
-        setUserData((prev) => prev ? { ...prev, preferences: selectedCategories } : prev);
-      } else {
-        alert('Failed to save preferences');
-      }
-    } catch (err) {
-      alert('Something went wrong');
-    }
-  };
+  // const handleSavePreferences = async () => {
+  //   try {
+  //     const response = await fetch(`${prod_url}/preferences/`, {
+  //       method: 'POST',
+  //       headers: { 'Content-Type': 'application/json' },
+  //       body: JSON.stringify({ preferences: selectedCategories }),
+  //       credentials: 'include',
+  //     });
+  //     if (response.ok) {
+  //       setUserData((prev) => prev ? { ...prev, preferences: selectedCategories } : prev);
+  //     } else {
+  //       alert('Failed to save preferences');
+  //     }
+  //   } catch (err) {
+  //     alert('Something went wrong');
+  //   }
+  // };
 
   const navLinks: NavLink[] = [
-    { name: "Home", path: "../" },
-    { name: "Logout", path: "#", onClick: handleLogout, highlight: true },
+    { name: "Home", path: "../home" },
+    // { name: "Logout", path: "#", onClick: handleLogout, highlight: true },
+    { name: "Logout", path: "#", highlight: true },
   ];
 
   return (

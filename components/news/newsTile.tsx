@@ -3,13 +3,15 @@
 import React from 'react';
 
 // Define props interface for NewsTile component
-interface NewsTileProps {
+interface Props {
   title: string;
   url: string;
-  des_facet: string[]; // Add des_facet to the props interface
 }
 
-const NewsTile: React.FC<NewsTileProps> = ({ title, url, des_facet }) => {
+export default function NewsTile({ 
+  title,
+  url
+}: Props) {
   return (
     <div 
       className="border border-gray-200 rounded-lg p-4 mb-4 shadow-md hover:shadow-lg transition-shadow"
@@ -27,5 +29,3 @@ const NewsTile: React.FC<NewsTileProps> = ({ title, url, des_facet }) => {
     </div>
   );
 };
-
-export default NewsTile;
