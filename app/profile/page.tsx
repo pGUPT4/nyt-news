@@ -177,7 +177,7 @@ const Profile: React.FC = () => {
                     </div>
                     <div>
                       <h3 className="text-lg font-mono font-medium mb-2 text-gray-800">Update Preferences:</h3>
-                      <div className="max-h-60 overflow-y-auto">
+                      {/* <div className="max-h-60 overflow-y-auto">
                         {categories.map((category) => (
                           <div key={category} className="mb-2">
                             <label className="flex items-center text-gray-800">
@@ -191,13 +191,13 @@ const Profile: React.FC = () => {
                             </label>
                           </div>
                         ))}
-                      </div>
-                      <button
+                      </div> */}
+                      {/* <button
                         onClick={handleSavePreferences}
                         className="mt-4 bg-blue-600 text-white p-2 rounded hover:bg-blue-700"
                       >
                         Save Preferences
-                      </button>
+                      </button> */}
                     </div>
                   </div>
                 )}
