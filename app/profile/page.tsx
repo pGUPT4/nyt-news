@@ -90,11 +90,11 @@ const Profile: React.FC = () => {
   //   }
   // };
 
-  const handleCategoryChange = (category: string) => {
-    setSelectedCategories((prev) =>
-      prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
-    );
-  };
+  // const handleCategoryChange = (category: string) => {
+  //   setSelectedCategories((prev) =>
+  //     prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
+  //   );
+  // };
 
   // const handleSavePreferences = async () => {
   //   try {

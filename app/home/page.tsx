@@ -1,7 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import FeedTray from '@/components/news/feedTray';
 import Navbar from '@/components/navbar';
 import { useRetrieveUserQuery, useNewsMutation } from '@/redux/features/authApiSlice';
