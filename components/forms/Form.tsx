@@ -1,20 +1,16 @@
 import { ChangeEvent, FormEvent } from 'react';
-import { Input } from '@/components/forms';
+import Input from './Input';
 
 interface Config {
 	labelText: string;
 	labelId: string;
 	type: string;
 	value: string;
-	link?: {
-		linkText: string;
-		linkUrl: string;
-	};
 	required?: boolean;
 }
 
 interface Props {
-	config: Config[];
+	config : Config[];
 	formHeader: string;
 	btnText: string;
 	onChange: (event: ChangeEvent<HTMLInputElement>) => void;
@@ -29,8 +25,8 @@ export default function Form({
 	onSubmit,
 }: Props) {
 	return (
-		<div className = ' flex flex-col items-center justify-center bg-black'>
-			<form className='bg-gray-400 p-6 rounded-lg shadow-lg w-2xl' onSubmit={onSubmit}>
+		<div className='border-4 border-indigo-500 h-screen flex items-center justify-center'>
+			<form className='bg-blue-400 p-6 rounded-lg shadow-lg w-xl' onSubmit={onSubmit}>
 				<h1 className="text-2xl font-bold mb-4">{formHeader}</h1>
 				{config.map(input => (
 					<Input
@@ -39,7 +35,6 @@ export default function Form({
 						type={input.type}
 						onChange={onChange}
 						value={input.value}
-						link={input.link}
 						required={input.required}
 					>
 						{input.labelText}

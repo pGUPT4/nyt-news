@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from "next/link";
-import Navbar from '@/components/navbar';
+import Navbar from '@/components/nav/navbar';
 import { useRetrieveUserQuery } from '@/redux/features/authApiSlice';
 
 interface NavLink {
@@ -117,7 +117,7 @@ const Profile: React.FC = () => {
   const navLinks: NavLink[] = [
     { name: "Home", path: "../home" },
     // { name: "Logout", path: "#", onClick: handleLogout, highlight: true },
-    { name: "Logout", path: "#", highlight: true },
+    { name: "Logout", path: "../auth/login", highlight: true },
   ];
 
   return (

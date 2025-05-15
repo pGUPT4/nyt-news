@@ -1,16 +1,12 @@
 'use client';
 
-import { useSignUp } from '@/hooks';
-import { Form } from '@/components/forms';
+import Form from './Form'
+import {useSignUp} from '@/app/hooks';
+import Link  from 'next/link';
+import { ToastContainer } from 'react-toastify';
 
 export default function RegisterForm() {
-	const {
-		email,
-		password,
-		re_password,
-		onChange,
-		onSubmit,
-	} = useSignUp();
+	const {email, password, re_password, onChange, onSubmit,} = useSignUp();
 
 	const config = [
 		{
@@ -37,12 +33,21 @@ export default function RegisterForm() {
 	];
 
 	return (
-		<Form
-			config={config}
-			formHeader='Register'
-			btnText='Sign up'
-			onChange={onChange}
-			onSubmit={onSubmit}
-		/>
+		<div>
+			<Form
+				config={config}
+				formHeader='Register'
+				btnText='Sign up'
+				onChange={onChange}
+				onSubmit={onSubmit}
+			/>
+			<p className="text-white text-center">
+				Already have an account?{' '}
+				<Link href="/auth/login" className="text-blue-400 hover:underline">
+					Login here
+				</Link>
+			</p>
+			<ToastContainer/>
+		</div>
 	);
 }

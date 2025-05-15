@@ -1,28 +1,12 @@
-'use client';
-
-import Link from "next/link";
 import { LoginForm } from '@/components/forms';
+import React from 'react'
 
-interface LoginResponse {
-  error?: string;
-  message?: string;
+const LoginPage = () => {
+    return (
+        <div>
+            <LoginForm/>
+        </div>
+    )
 }
 
-const Login: React.FC = () => {
-
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-black">
-      <div className="flex flex-col items-center">
-        <LoginForm />
-        <p className="text-white text-center">
-          New here?{' '}
-          <Link href="/auth/signup" className="text-blue-400 hover:underline">
-            Create an account
-          </Link>
-        </p>
-      </div>
-    </div>
-  );
-};
-
-export default Login;
+export default LoginPage;

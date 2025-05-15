@@ -1,58 +1,38 @@
 import { apiSlice } from '../services/apiSlice';
 
-interface User {
-	email: string;
-}
 
-const authApiSlice = apiSlice.injectEndpoints({
-	endpoints: builder => ({
-		retrieveUser: builder.query<User, void>({
-			query: () => '/users/me',
-		}),
+
+export const userApiSlice = apiSlice.injectEndpoints({
+	endpoints: (builder) => ({
 		login: builder.mutation({
-			query: ({ email, password }) => ({
-				url: '/jwt/create/',
+			query: ({email, password}) => ({
+				url: `auth/login`,
 				method: 'POST',
-				body: { email, password },
-			}),
-		}),
-		register: builder.mutation({
-			query: ({
-				email,
-				password,
-				re_password,
-			}) => ({
-				url: '/users/',
-				method: 'POST',
-				body: { email, password, re_password },
-			}),
-		}),
-		verify: builder.mutation({
-			query: () => ({
-				url: '/jwt/verify/',
-				method: 'POST',
+				body: {email, password},
 			}),
 		}),
 		logout: builder.mutation({
 			query: () => ({
-				url: '/logout/',
+				url: `auth/logout`,
 				method: 'POST',
 			}),
 		}),
-		news: builder.mutation({
-			query: () => ({
-				url: '/news/',
-				provideTags: ['News'],
-			})
-		})
+		signup: builder.mutation({
+			query: ({email, password, re_password}) => ({
+				url: `auth/signup`,
+				method: 'POST',
+				body: {email, password, re_password},
+			}),
+		}),
+		check: builder.query({
+			query: () => `auth/check`,
+		}),
 	}),
 });
 
 export const {
-	useRetrieveUserQuery,
 	useLoginMutation,
-	useRegisterMutation,
-	useVerifyMutation,
 	useLogoutMutation,
-	useNewsMutation,
-} = authApiSlice;
+	useSignupMutation,
+	useCheckQuery,
+} = userApiSlice;
