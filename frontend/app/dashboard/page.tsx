@@ -16,7 +16,7 @@ interface NavLink {
 
 const Home: React.FC = () => {
 	const router = useRouter();
-	const {onClick, onSubmit} = useLogout();
+	const {onClick} = useLogout();
 	
 	const navLinks: NavLink[] = [
 		{ name: "News", path: "/dashboard" },

@@ -26,23 +26,7 @@ export default function useLogout() {
             });
     };
 
-	const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
-		event.preventDefault();
-
-        logout({})
-            .unwrap()
-            .then(() => {
-                dispatch(setLogout());
-                toast.success('Logged out successfully');
-                router.push('/auth/login');
-            })
-            .catch(() => {
-                toast.error('Failed to log out');
-            });
-	};
-
 	return {
-        onClick,
-		onSubmit,
+        onClick
 	};
 }
