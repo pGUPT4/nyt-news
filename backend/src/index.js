@@ -12,6 +12,7 @@ dotenv.config();
 const PORT = process.env.PORT;
 const __dirname = path.resolve();
 
+
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
@@ -25,6 +26,12 @@ app.use(
 app.use("/api/auth", authRoutes);
 
 if (process.env.NODE_ENV === "production") {
+    app.use(
+      cors({
+        origin: "https://nyt-news-ne0e.onrender.com/",
+        credentials: true,
+      })
+    );
     app.use(express.static(path.join(__dirname, "../frontend/out")));
   
     app.get("*", (req, res) => {
