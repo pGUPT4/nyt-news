@@ -2,7 +2,7 @@
 
 import FeedTray from '@/components/newsItem/feedTray';
 import Navbar from '@/components/nav/navbar';
-import { useLogout } from '../hooks';
+import { useLogout } from './hooks';
 import { useAppSelector } from '@/redux/store';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -19,7 +19,7 @@ const Home: React.FC = () => {
 	const {onClick} = useLogout();
 	
 	const navLinks: NavLink[] = [
-		{ name: "News", path: "/dashboard" },
+		{ name: "News", path: "/" },
 		{ name: "Logout", path: "/auth/login", onClick: onClick },
 	];
 

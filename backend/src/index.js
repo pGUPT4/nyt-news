@@ -25,10 +25,10 @@ app.use(
 app.use("/api/auth", authRoutes);
 
 if (process.env.NODE_ENV === "production") {
-    app.use(express.static(path.join(__dirname, "../frontend/dist")));
+    app.use(express.static(path.join(__dirname, "../frontend/out")));
   
     app.get("*", (req, res) => {
-      res.sendFile(path.join(__dirname, "../frontend", "dist", "dashboard.html"));
+      res.sendFile(path.join(__dirname, "../frontend", "out", "index.html"));
     });
   }
 
