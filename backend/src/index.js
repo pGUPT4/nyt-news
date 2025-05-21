@@ -26,12 +26,6 @@ app.use(
 app.use("/api/auth", authRoutes);
 
 if (process.env.NODE_ENV === "production") {
-    app.use(
-      cors({
-        origin: "https://nyt-news-ne0e.onrender.com/",
-        credentials: true,
-      })
-    );
     app.use(express.static(path.join(__dirname, "../frontend/out")));
   
     app.get("*", (req, res) => {

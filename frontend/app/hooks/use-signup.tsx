@@ -31,7 +31,7 @@ export default function useSignUp() {
 		signup({ email, password, re_password })
 			.unwrap()
 			.then(() => {
-				toast.success('Please check email to verify account');
+				toast.success('User registered successfully');
 				router.push('/auth/login');
 			})
 			.catch(() => {
